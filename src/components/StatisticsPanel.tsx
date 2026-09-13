@@ -1,5 +1,5 @@
 import React from 'react';
-import { HardDrive, Activity, Image as ImageIcon, Zap, Maximize, Percent } from 'lucide-react';
+import { HardDrive, Activity, Image as ImageIcon, Zap, Maximize, Percent, Download } from 'lucide-react';
 
 interface Props {
     originalSize: number; // bytes
@@ -9,9 +9,10 @@ interface Props {
     psnr: number;
     retained: number;
     total: number;
+    exportedSize: number;
 }
 
-export const StatisticsPanel: React.FC<Props> = ({ originalSize, width, height, mse, psnr, retained, total }) => {
+export const StatisticsPanel: React.FC<Props> = ({ originalSize, width, height, mse, psnr, retained, total, exportedSize }) => {
     
     const formatBytes = (bytes: number) => {
         if (bytes === 0) return '0 B';
@@ -21,18 +22,15 @@ export const StatisticsPanel: React.FC<Props> = ({ originalSize, width, height, 
         return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
     };
 
-    // Estimated compressed size:
-    // A naive estimate: Original size * (retained / total) + metadata overhead.
-    // In a real Fourier compression scheme, quantization and entropy coding would be used.
-    // For this prototype, we'll estimate based purely on the ratio.
     const ratio = retained / total;
     const estSize = originalSize * ratio;
     
     return (
-        <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mb-6">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
             <StatCard icon={<ImageIcon size={18} />} title="Dimensions" value={`${width} × ${height}`} />
             <StatCard icon={<HardDrive size={18} />} title="Original Size" value={formatBytes(originalSize)} />
-            <StatCard icon={<Zap size={18} />} title="Est. Compressed Size" value={formatBytes(estSize)} />
+            <StatCard icon={<Zap size={18} />} title="Est. Fourier Size" value={formatBytes(estSize)} subtext="Theoretical" />
+            <StatCard icon={<Download size={18} />} title="Exported JPEG Size" value={formatBytes(exportedSize)} subtext="Actual download" />
             
             <StatCard icon={<Percent size={18} />} title="Retained Coeffs" value={`${((retained/total)*100).toFixed(2)}%`} subtext={`${retained} of ${total}`} />
             <StatCard icon={<Activity size={18} />} title="MSE" value={mse.toFixed(2)} subtext="Mean Squared Error" />

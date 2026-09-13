@@ -25,6 +25,7 @@ interface AppState {
     psnr: number;
     retained: number;
     total: number;
+    exportedSize: number;
     
     // Controls
     ratio: number;
@@ -45,6 +46,7 @@ function App() {
         psnr: 0,
         retained: 0,
         total: 0,
+        exportedSize: 0,
         ratio: 0.25,
         mode: 'magnitude',
         isProcessing: false,
@@ -87,6 +89,22 @@ function App() {
             workerRef.current?.terminate();
         };
     }, []);
+
+    useEffect(() => {
+        if (state.reconstructedImage && canvasRef.current) {
+            const ctx = canvasRef.current.getContext('2d');
+            if (ctx) {
+                canvasRef.current.width = state.width;
+                canvasRef.current.height = state.height;
+                ctx.putImageData(state.reconstructedImage, 0, 0);
+                canvasRef.current.toBlob((blob) => {
+                    if (blob) {
+                        setState(s => ({ ...s, exportedSize: blob.size }));
+                    }
+                }, 'image/jpeg', 0.90);
+            }
+        }
+    }, [state.reconstructedImage, state.width, state.height]);
 
     const handleImageSelect = async (file: File) => {
         setState(s => ({ ...s, isProcessing: true, originalFile: file }));
@@ -144,6 +162,7 @@ function App() {
             psnr: 0,
             retained: 0,
             total: 0,
+            exportedSize: 0,
             ratio: 0.25,
             mode: 'magnitude',
             isProcessing: false,
@@ -205,6 +224,7 @@ function App() {
                             psnr={state.psnr}
                             retained={state.retained}
                             total={state.total}
+                            exportedSize={state.exportedSize}
                         />
 
                         <CompressionControls 
