@@ -159,8 +159,8 @@ function App() {
             ctx.putImageData(state.reconstructedImage, 0, 0);
             
             const link = document.createElement('a');
-            link.download = `compressed_image_r${state.ratio}_${state.mode}.png`;
-            link.href = canvasRef.current.toDataURL('image/png');
+            link.download = `compressed_image_r${Math.round(state.ratio*100)}_${state.mode}.jpg`;
+            link.href = canvasRef.current.toDataURL('image/jpeg', 0.90);
             link.click();
         }
     };
@@ -188,9 +188,13 @@ function App() {
                                     <RefreshCw size={16} /> Reset
                                 </button>
                                 <button onClick={handleDownload} className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-medium transition-colors">
-                                    <Download size={16} /> Download
+                                    <Download size={16} /> Download JPEG
                                 </button>
                             </div>
+                        </div>
+
+                        <div className="mb-4 p-4 bg-yellow-50 border border-yellow-200 rounded-lg text-sm text-yellow-800">
+                            <strong>Note on File Sizes:</strong> The "Est. Compressed Size" reflects the theoretical size if we only stored the retained Fourier coefficients and coordinates in a custom binary format. Downloading the reconstructed image converts those pixels back into a standard JPEG/PNG file, which uses its own compression algorithms. Therefore, the downloaded file size will <strong>not</strong> directly match the theoretical Fourier compression size.
                         </div>
 
                         <StatisticsPanel 
