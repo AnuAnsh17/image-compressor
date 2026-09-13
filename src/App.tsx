@@ -4,7 +4,7 @@ import { StatisticsPanel } from './components/StatisticsPanel';
 import { CompressionControls } from './components/CompressionControls';
 import { ImageComparison } from './components/ImageComparison';
 import { HowItWorks } from './components/HowItWorks';
-import { resizeImageToPowerOfTwo, grayscale, createImageDataFromGrayscale } from './utils/imageUtils';
+import { resizeImageToPowerOfTwo, grayscale, createImageDataFromGrayscale, splitChannels, mergeChannels } from './utils/imageUtils';
 import type { CompressionMode } from './utils/compression';
 import { Download, RefreshCw } from 'lucide-react';
 import FFTWorker from './workers/fft.worker.ts?worker';
@@ -61,7 +61,7 @@ function App() {
             if (type === 'PROCESS_IMAGE_RESULT') {
                 setState(prev => ({
                     ...prev,
-                    reconstructedImage: createImageDataFromGrayscale(payload.reconstructed, prev.width, prev.height),
+                    reconstructedImage: mergeChannels(payload.r, payload.g, payload.b, prev.width, prev.height),
                     magnitudeImage: createImageDataFromGrayscale(payload.magnitude, prev.width, prev.height),
                     compMagnitudeImage: createImageDataFromGrayscale(payload.compMagnitude, prev.width, prev.height),
                     mse: payload.mse,
@@ -73,7 +73,7 @@ function App() {
             } else if (type === 'UPDATE_COMPRESSION_RESULT') {
                 setState(prev => ({
                     ...prev,
-                    reconstructedImage: createImageDataFromGrayscale(payload.reconstructed, prev.width, prev.height),
+                    reconstructedImage: mergeChannels(payload.r, payload.g, payload.b, prev.width, prev.height),
                     compMagnitudeImage: createImageDataFromGrayscale(payload.compMagnitude, prev.width, prev.height),
                     mse: payload.mse,
                     psnr: payload.psnr,
@@ -98,6 +98,7 @@ function App() {
         const { width, height, data } = await resizeImageToPowerOfTwo(img, 512); // Max 512 for perf
         const originalImage = new ImageData(data as any, width, height);
         
+        const { r, g, b } = splitChannels(data);
         const grayData = grayscale(data);
         
         setState(s => ({ ...s, originalImage, width, height, total: width * height }));
@@ -105,7 +106,7 @@ function App() {
         workerRef.current?.postMessage({
             type: 'PROCESS_IMAGE',
             payload: {
-                grayData,
+                r, g, b, grayData,
                 width,
                 height,
                 ratio: state.ratio,
